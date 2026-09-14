@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지구 생물 환생 시뮬레이터</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+        }
+        h1 { margin-bottom: 10px; font-size: 24px; }
+        p { color: #94a3b8; margin-bottom: 20px; }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #4f46e5; }
+        #result {
+            margin-top: 25px;
+            font-size: 18px;
+            line-height: 1.6;
+            min-height: 90px;
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .category {
+            font-size: 13px;
+            color: #38bdf8;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .probability {
+            font-size: 14px;
+            color: #f43f5e;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        .history-box {
+            margin-top: 25px;
+            text-align: left;
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .history-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            color: #38bdf8;
+        }
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .history-list li {
+            padding: 4px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌍 지구 생물 환생 가챠</h1>
+        <p>버튼을 눌러 운명의 환생을 시작해보세요!</p>
+        <button onclick="reincarnate()">환생하기</button>
+        
+        <div id="result">여기를 눌러 운명을 시험해보세요.</div>
+
+        <div class="history-box">
+            <h3>📜 나의 전생 기록 (최신순)</h3>
+            <ul id="historyList" class="history-list">
+                <li style="color: #64748b;">아직 환생 기록이 없습니다.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const speciesPool = [
+            { category: "바이러스 및 미생물 (압도적 다수)", weight: 70, items: ["대장균", "황색포도상구균", "인플루엔자 바이러스", "심해 열수구 고세균", "유산균", "남세균(시아노박테리아)"] },
+            { category: "곤충 및 절지동물", weight: 20, items: ["이집트숲모기", "집가루진드기", "뿔소똥구리", "독거미", "꿀벌", "초파리", "아프리카왕개미"] },
+            { category: "어류 및 해양생물", weight: 7, items: ["크릴새우", "멸치", "심해 아귀", "해파리", "푸른바다거북", "흰동가리"] },
+            { category: "조류 (새)", weight: 2, items: ["비둘기", "참새", "집닭", "황제펭귄", "매", "바다제비"] },
+            { category: "포유류", weight: 0.9, items: ["집쥐", "길고양이", "들소", "침팬지", "코끼리", "박쥐", "인간"] },
+            { category: "희귀 당첨 (로또)", weight: 0.1, items: ["지구 외계인(?)", "환생 관리자", "불멸의 해파리(Turritopsis dohrnii)", "천재적인 야생 고양이"] }
+        ];
+
+        let reincarnationHistory = [];
+
+        function reincarnate() {
+            // 1. 전체 가중치 합산
+            const totalWeight = speciesPool.reduce((sum, group) => sum + group.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+
+            let selectedGroup = speciesPool[0];
+            for (let group of speciesPool) {
+                if (randomNum < group.weight) {
+                    selectedGroup = group;
+                    break;
+                }
+                randomNum -= group.weight;
+            }
+
+            // 2. 그룹 내 개체 무작위 선택
+            const randomItem = selectedGroup.items[Math.floor(Math.random() * selectedGroup.items.length)];
+
+            // 3. 정확한 확률 계산 (그룹 확률 * 그룹 내 개체 확률)
+            const groupProbability = (selectedGroup.weight / totalWeight);
+            const itemProbabilityInGroup = (1 / selectedGroup.items.length);
+            const finalProbability = (groupProbability * itemProbabilityInGroup) * 100;
+
+            // 소수점 표현 정리
+            let probText = finalProbability < 0.01 ? finalProbability.toFixed(4) + "%" : finalProbability.toFixed(2) + "%";
+
+            // 4. 결과 화면 출력
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <div class="category">${selectedGroup.category}</div>
+                <div>당신은 <strong>${randomItem}</strong>(으)로 환생했습니다! 🎉</div>
+                <div class="probability">당첨 확률: ${probText}</div>
+            `;
+
+            // 5. 전생 히스토리에 추가
+            reincarnationHistory.unshift(`${selectedGroup.items.length ? '' : ''} ${randomItem} (${probText})`);
+            
+            // 화면에 히스토리 렌더링
+            const historyList = document.getElementById("historyList");
+            historyList.innerHTML = reincarnationHistory.map((item, index) => `<li>${index + 1}. ${item}</li>`).join('');
+        }
+    </script>
+</body>
+</html>
